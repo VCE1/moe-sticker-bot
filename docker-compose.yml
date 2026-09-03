@@ -1,0 +1,49 @@
+services:
+  bot:
+    build:
+      context: .
+    container_name: moe-sticker-bot
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+    command:
+      - --bot_token=8815628242:AAFoWSz9PYcHG_mJbV9CdxStL1W-Qg70g8E
+      - --data_dir=/data
+      - --db_addr=mariadb:3306
+      - --db_user=root
+      - --db_pass=msb_root_pass
+      # - --admin_uid=123456789
+      # - --webapp_url=https://example.com
+      # - --webapp_listen_addr=0.0.0.0:3921
+      # - --log_level=debug
+
+    environment:
+      http_proxy: "http://192.168.6.233:7890"
+      https_proxy: "http://192.168.6.233:7890"
+      no_proxy: "localhost,127.0.0.1"
+
+    volumes:
+      - msb_data:/data
+    # ports:
+    #   - 3921:3921
+
+  mariadb:
+    image: mariadb:10.6
+    container_name: moe-sticker-bot-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: msb_root_pass
+    volumes:
+      - msb_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect"]
+      start_period: 120s
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  msb_data:
+  msb_db:
